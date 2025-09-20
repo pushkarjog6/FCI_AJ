@@ -519,12 +519,13 @@ with tab6:
         stock_now = float(s.iloc[0]) if not s.empty else 0.0
         future = dispatch_lg[(dispatch_lg["FPS_ID"]==fps_id) & (dispatch_lg["Day"]> end_day)]["Day"]
         next_day = int(future.min()) if not future.empty else None
+        next_date = day_map[next_day] if next_day is not None and next_day in day_map else None
         days_to = (next_day - end_day) if next_day else None
         fps_data.append({
             "FPS_ID": fps_id,
             "FPS_Name": fps.set_index("FPS_ID").loc[fps_id,"FPS_Name"] if "FPS_Name" in fps.columns else None,
             "Current_Stock_tons": stock_now,
-            "Next_Receipt_Day": next_day,
+            "Next_Receipt_Date": next_date,   # 🔑 changed
             "Days_To_Receipt": days_to
         })
     fps_data_df = pd.DataFrame(fps_data)
@@ -537,22 +538,20 @@ with tab6:
 # ————————————————————————————————
 with tab7:
     st.subheader("Download FPS Report")
-    st.download_button("Excel", to_excel(report), f"FPS_Report_{day_range[0]}_to_{day_range[1]}.xlsx",
-                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-    # ✅ Only build the PDF if there are rows to avoid IndexError from empty table
+    st.download_button(
+        "Excel",
+        to_excel(report),
+        f"FPS_Report_{day_map[day_range[0]].strftime('%Y-%m-%d')}_to_{day_map[day_range[1]].strftime('%Y-%m-%d')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
     if isinstance(report, pd.DataFrame) and not report.empty:
-        pdf_buf = BytesIO()
-        with PdfPages(pdf_buf) as pdf:
-            fig, ax = plt.subplots(figsize=(8, max(1, len(report)*0.3) + 1))
-            ax.axis('off')
-            tbl = ax.table(cellText=report.values, colLabels=report.columns, loc='center')
-            tbl.auto_set_font_size(False)
-            tbl.set_fontsize(10)
-            pdf.savefig(fig, bbox_inches='tight')
-        st.download_button("PDF", pdf_buf.getvalue(),
-                           f"FPS_Report_{day_range[0]}_to_{day_range[1]}.pdf",
-                           mime="application/pdf")
+        ...
+        st.download_button(
+            "PDF",
+            pdf_buf.getvalue(),
+            f"FPS_Report_{day_map[day_range[0]].strftime('%Y-%m-%d')}_to_{day_map[day_range[1]].strftime('%Y-%m-%d')}.pdf",
+            mime="application/pdf"
+        )
     else:
         st.info("No rows in the selected window to export as PDF.")
 
