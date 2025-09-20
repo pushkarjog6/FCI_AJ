@@ -382,6 +382,10 @@ with tab1:
         fig1 = px.bar(df1, x="Day", y="Quantity_tons", text="Quantity_tons")
 
     fig1.update_traces(texttemplate="%{text:.1f}t", textposition="outside")
+    fig1.update_xaxes(
+        tickformat="%d-%b",   # e.g. 20-Sep
+        dtick="D1"            # one tick per day
+    )
     st.plotly_chart(fig1, use_container_width=True, key="cg_lg_overview")
 
 # ————————————————————————————————
@@ -393,8 +397,18 @@ with tab2:
     if not base.empty and selected_lg_ids:
         base = base[base["LG_ID"].isin(selected_lg_ids)]
     df2 = base.groupby("Day", as_index=False)["Quantity_tons"].sum() if not base.empty else pd.DataFrame(columns=["Day","Quantity_tons"])
-    fig2 = px.bar(df2, x="Day", y="Quantity_tons", text="Quantity_tons")
+    if not df2.empty:
+        df2["Date"] = df2["Day"].map(day_map)   # 🔑 map day → date
+        fig2 = px.bar(df2, x="Date", y="Quantity_tons", text="Quantity_tons",
+                    hover_data={"Day": True, "Date": True})
+    else:
+        fig2 = px.bar(df2, x="Day", y="Quantity_tons", text="Quantity_tons")
+
     fig2.update_traces(texttemplate="%{text:.1f}t", textposition="outside")
+    fig1.update_xaxes(
+        tickformat="%d-%b",   # e.g. 20-Sep
+        dtick="D1"            # one tick per day
+    )
     st.plotly_chart(fig2, use_container_width=True, key="lg_fps_overview")
 
 # ————————————————————————————————
