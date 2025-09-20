@@ -374,7 +374,13 @@ with tab1:
     if not base.empty and selected_lg_ids:
         base = base[base["LG_ID"].isin(selected_lg_ids)]
     df1 = base.groupby("Day", as_index=False)["Quantity_tons"].sum() if not base.empty else pd.DataFrame(columns=["Day","Quantity_tons"])
-    fig1 = px.bar(df1, x="Day", y="Quantity_tons", text="Quantity_tons")
+    if not df1.empty:
+        df1["Date"] = df1["Day"].map(day_map)   # 🔑 map day → date
+        fig1 = px.bar(df1, x="Date", y="Quantity_tons", text="Quantity_tons",
+                    hover_data={"Day": True, "Date": True})  # show both if you want
+    else:
+        fig1 = px.bar(df1, x="Day", y="Quantity_tons", text="Quantity_tons")
+
     fig1.update_traces(texttemplate="%{text:.1f}t", textposition="outside")
     st.plotly_chart(fig1, use_container_width=True, key="cg_lg_overview")
 
