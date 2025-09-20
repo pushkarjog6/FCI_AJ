@@ -499,8 +499,10 @@ with tab5:
     st.subheader("FPS At-Risk List")
     if not fps_stock.empty:
         arf = fps_stock.query("Day>=@day_range[0] & Day<=@day_range[1] & At_Risk")[["Day","FPS_ID","Stock_Level_tons","Reorder_Threshold_tons"]]
+        arf["Date"] = arf["Day"].map(day_map)   # 🔑 add date column
+        arf = arf.drop(columns=["Day"])
     else:
-        arf = pd.DataFrame(columns=["Day","FPS_ID","Stock_Level_tons","Reorder_Threshold_tons"])
+        arf = pd.DataFrame(columns=["Date","FPS_ID","Stock_Level_tons","Reorder_Threshold_tons"])
     st.dataframe(arf, use_container_width=True)
     st.download_button("Download At-Risk (Excel)", to_excel(arf), "fps_at_risk.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
