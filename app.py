@@ -425,20 +425,22 @@ with tab3:
     if not cg_df.empty:
         cg_report = (
             cg_df.groupby(["LG_ID", "Day"], as_index=False)
-                 .agg(Total_Dispatched_tons=("Quantity_tons", "sum"),
-                      Trips_Count=("Vehicle_ID", "count"))
-                 .merge(lgs[["LG_ID", "LG_Name"]], on="LG_ID", how="left")
-                 .sort_values(["Day", "LG_Name", "LG_ID"])
+                .agg(Total_Dispatched_tons=("Quantity_tons", "sum"),
+                    Trips_Count=("Vehicle_ID", "count"))
+                .merge(lgs[["LG_ID", "LG_Name"]], on="LG_ID", how="left")
+                .sort_values(["Day", "LG_Name", "LG_ID"])
         )
+        cg_report["Date"] = cg_report["Day"].map(day_map)  # 🔑 add Date column
+        cg_report = cg_report.drop(columns=["Day"])        # 🔑 remove Day if not needed
     else:
-        cg_report = pd.DataFrame(columns=["LG_ID","Day","Total_Dispatched_tons","Trips_Count","LG_Name"])
+        cg_report = pd.DataFrame(columns=["LG_ID","Date","Total_Dispatched_tons","Trips_Count","LG_Name"])
 
     st.dataframe(cg_report, use_container_width=True)
 
     st.download_button(
         "Download CG→LG Report (Excel)",
         to_excel(cg_report),
-        f"CG_to_LG_Report_{day_range[0]}_to_{day_range[1]}.xlsx",
+        f"CG_to_LG_Report_{day_map[day_range[0]].strftime('%Y-%m-%d')}_to_{day_map[day_range[1]].strftime('%Y-%m-%d')}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
